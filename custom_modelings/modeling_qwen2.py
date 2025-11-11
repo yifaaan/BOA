@@ -34,7 +34,7 @@ try:
     from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
 except ImportError:
     ROPE_INIT_FUNCTIONS = {}
-    dynamic_rope_update = lambda x, y, z: None
+    dynamic_rope_update = lambda func: func  # Decorator that returns the function unchanged
 from transformers.modeling_utils import PreTrainedModel
 try:
     from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
@@ -43,7 +43,9 @@ except ImportError:
 try:
     from transformers.processing_utils import Unpack
 except ImportError:
-    Unpack = lambda x: x
+    # For compatibility with older transformers versions
+    from typing import TypeVar
+    Unpack = TypeVar('Unpack')
 from transformers.utils import logging
 # Compatibility fixes for different transformers versions
 try:
