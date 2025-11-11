@@ -1,0 +1,14 @@
+# Core dependencies for BOA
+torch>=2.0.0
+transformers>=4.30.0
+accelerate>=0.20.0
+datasets
+safetensors
+huggingface-hub
+numpy
+scipy
+scikit-learn
+peft>=0.4.0
+einops
+tqdm
+pyyaml

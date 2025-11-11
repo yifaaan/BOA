@@ -205,4 +205,7 @@ This implementation extends the original BOA codebase and follows the same licen
       --nsamples 64 \
       --use_awq \
       --qparam_comput Hessian \
-      --lm_eval
+      --lm_eval \
+      --act_order_col \
+      --act_order_row \
+      --block_v
