@@ -12,10 +12,17 @@ from torch import nn
 from transformers.activations import ACT2FN
 from transformers.cache_utils import Cache, DynamicCache
 from transformers.generation import GenerationMixin
-from transformers.integrations import use_kernel_forward_from_hub
-from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
-from transformers.modeling_flash_attention_utils import FlashAttentionKwargs
-from transformers.modeling_layers import GradientCheckpointingLayer
+# from transformers.integrations import use_kernel_forward_from_hub  # Not available in current transformers version
+# Compatibility imports for different transformers versions
+try:
+    from transformers.masking_utils import create_causal_mask, create_sliding_window_causal_mask
+except ImportError:
+    from transformers.modeling_attn_mask_utils import _prepare_4d_causal_attention_mask as create_causal_mask
+    create_sliding_window_causal_mask = create_causal_mask
+# from transformers.modeling_flash_attention_utils import FlashAttentionKwargs  # Not available in current version
+FlashAttentionKwargs = dict  # Fallback for compatibility
+# from transformers.modeling_layers import GradientCheckpointingLayer  # Not available in current version
+from torch.nn import Module as GradientCheckpointingLayer  # Fallback for compatibility
 from transformers.modeling_outputs import (
     BaseModelOutputWithPast,
     CausalLMOutputWithPast,
@@ -23,10 +30,28 @@ from transformers.modeling_outputs import (
     SequenceClassifierOutputWithPast,
     TokenClassifierOutput,
 )
-from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
-from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS, PreTrainedModel
-from transformers.processing_utils import Unpack
-from transformers.utils import LossKwargs, auto_docstring, can_return_tuple, logging
+try:
+    from transformers.modeling_rope_utils import ROPE_INIT_FUNCTIONS, dynamic_rope_update
+except ImportError:
+    ROPE_INIT_FUNCTIONS = {}
+    dynamic_rope_update = lambda x, y, z: None
+from transformers.modeling_utils import PreTrainedModel
+try:
+    from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
+except ImportError:
+    ALL_ATTENTION_FUNCTIONS = {}
+try:
+    from transformers.processing_utils import Unpack
+except ImportError:
+    Unpack = lambda x: x
+from transformers.utils import logging
+# Compatibility fixes for different transformers versions
+try:
+    from transformers.utils import LossKwargs, auto_docstring, can_return_tuple
+except ImportError:
+    LossKwargs = dict
+    auto_docstring = lambda x: x
+    can_return_tuple = lambda x: x
 from transformers.models.qwen2.configuration_qwen2 import Qwen2Config
 
 
@@ -195,7 +220,7 @@ class Qwen2Attention(nn.Module):
         return attn_output, attn_weights
 
 
-@use_kernel_forward_from_hub("RMSNorm")
+# @use_kernel_forward_from_hub("RMSNorm")  # Decorator not available
 class Qwen2RMSNorm(nn.Module):
     def __init__(self, hidden_size, eps=1e-6):
         """
